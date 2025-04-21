@@ -1,8 +1,8 @@
-/* Quansheng UV-K5 EEPROM programmer v0.9 
+/* Quansheng UV-K5 EEPROM programmer v0.9
  * (c) 2023 Jacek Lipkowski <sq5bpf@lipkowski.org>
  *
- * This program can read and write the EEPROM of Quansheng UVK5 Mark II 
- * and probably other similar radios via the serial port. 
+ * This program can read and write the EEPROM of Quansheng UVK5 Mark II
+ * and probably other similar radios via the serial port.
  *
  * It can read/write arbitrary data, and might be useful for reverse
  * engineering the radio configuration.
@@ -11,11 +11,11 @@
  * permanently breaking your radio. The flash image is an unencrypted
  * image, without the version inserted at 0x2000.
  *
- * Use at your own risk. 
+ * Use at your own risk.
  *
  *
  * This program is licensed under the GNU GENERAL PUBLIC LICENSE v3
- * License text avaliable at: http://www.gnu.org/copyleft/gpl.html 
+ * License text avaliable at: http://www.gnu.org/copyleft/gpl.html
  */
 
 /*
@@ -66,13 +66,13 @@
 #define UVK5_EEPROM_BLOCKSIZE 0x80
 #define UVK5_PREPARE_TRIES 10
 
-/* actually the flash is bigger, but there is a bootloader at 0xf000 that we don't want to overwrite 
+/* actually the flash is bigger, but there is a bootloader at 0xf000 that we don't want to overwrite
  * if you're really brave, then you can modify the code by changing UVK5_MAX_FLASH_SIZE to 0x10000
  * and probably flash the bootloader too, but i would really advise against doing this
  *
  * maybe at some point i will make a command line flag for this
  */
-#define UVK5_MAX_FLASH_SIZE 0xf000 
+#define UVK5_MAX_FLASH_SIZE 0xf000
 #define UVK5_FLASH_BLOCKSIZE 0x100
 
 #define DEFAULT_SERIAL_PORT "/dev/ttyUSB0"
@@ -106,7 +106,7 @@ struct k5_command {
 };
 
 /**** commands ********/
-unsigned char uvk5_hello2[]={0x14, 0x05, 0x04, 0x00, 0x9f, 0x25, 0x5a, 0x64}; 
+unsigned char uvk5_hello2[]={0x14, 0x05, 0x04, 0x00, 0x9f, 0x25, 0x5a, 0x64};
 
 /* commands:
  * 0x14 - hello
@@ -122,7 +122,7 @@ unsigned char uvk5_hello2[]={0x14, 0x05, 0x04, 0x00, 0x9f, 0x25, 0x5a, 0x64};
  *
  * from the radio:
  * 0x18 - broadcast from the radio when flash mode is enabled
- * 
+ *
  *
  */
 
@@ -288,7 +288,7 @@ uint16_t crc16xmodem(unsigned char *addr, int num, int crc)
 void xorarr(unsigned char *inarr,int len)
 {
 	int len2=0;
-	unsigned char k5_xor_array[16]= { 
+	unsigned char k5_xor_array[16]= {
 		0x16 , 0x6c , 0x14 , 0xe6 , 0x2e , 0x91 , 0x0d , 0x40 ,
 		0x21 , 0x35 , 0xd5 , 0x40 , 0x13 , 0x03 , 0xe9 , 0x80 };
 
@@ -345,16 +345,16 @@ int k5_deobfuscate(struct k5_command *cmd)
 	if (!cmd->obfuscated_cmd) return(0);
 	if (cmd->cmd) { free (cmd->cmd); }
 	/* check the obfuscated datagram */
-	if ((cmd->obfuscated_cmd[0]!=0xab)||(cmd->obfuscated_cmd[1]!=0xcd)) { 
+	if ((cmd->obfuscated_cmd[0]!=0xab)||(cmd->obfuscated_cmd[1]!=0xcd)) {
 		//bad header
 		if (verbose>2)	{ printf("bad header\n"); k5_hexdump(cmd); }
-		return(0); 
-	} 
-	if ((cmd->obfuscated_cmd[cmd->obfuscated_len-2]!=0xdc)||(cmd->obfuscated_cmd[cmd->obfuscated_len-1]!=0xba)) { 
+		return(0);
+	}
+	if ((cmd->obfuscated_cmd[cmd->obfuscated_len-2]!=0xdc)||(cmd->obfuscated_cmd[cmd->obfuscated_len-1]!=0xba)) {
 		//bad footer
 		if (verbose>2)	{ printf("bad footer\n"); k5_hexdump(cmd); }
-		return(0); 
-	} 
+		return(0);
+	}
 	cmd->len=cmd->obfuscated_len-6; /* header  + length + data + crc + footer */
 	cmd->cmd=calloc(cmd->len,1);
 	memcpy(cmd->cmd,cmd->obfuscated_cmd+4,cmd->len);
@@ -371,11 +371,11 @@ int k5_deobfuscate(struct k5_command *cmd)
 		if (d==c) {
 			printf("** the protocol actually uses proper crc on datagrams from the radio, please inform the author of the radio/firmware version\n");
 			k5_hexdump(cmd);
-		} 
+		}
 		cmd->crcok=0;
 		if (verbose>2)	{ printf("bad crc 0x%4.4x (should be 0x%4.4x)\n",d,c); k5_hexdump(cmd); }
 		cmd->len=cmd->len-2; /* skip crc */
-		return(0); 
+		return(0);
 
 	}
 	return(1);
@@ -385,7 +385,7 @@ int k5_deobfuscate(struct k5_command *cmd)
 int k5_send_cmd(int fd,struct k5_command *cmd) {
 	int l;
 
-	if (!k5_obfuscate(cmd)) { 
+	if (!k5_obfuscate(cmd)) {
 		fprintf(stderr,"obfuscate error!\n");
 		return(0);
 	}
@@ -551,7 +551,7 @@ int k5_reset(int fd)
 	if (verbose>1) printf("@@@@@@@@@@@@@@@@@@    reset\n");
 	r=k5_send_buf(fd,uvk5_reset,sizeof(uvk5_reset));
 	return(r);
-}	
+}
 /*  end of EEPROM read/write support */
 
 
@@ -592,7 +592,7 @@ int wait_flash_message(int fd,int ntimes) {
 			destroy_k5_struct(cmd);
 			continue;
 		}
-		/* 36 is normal length, 22 is sent by some LSENG UV-K5 clone, 
+		/* 36 is normal length, 22 is sent by some LSENG UV-K5 clone,
 		 * 20 is sent by some other version, so just use an arbitrarily chosen range */
 		if ((cmd->len<18)||(cmd->len>50)) {
 			printf("wait_flash_message: got unexpected command length %i\n",cmd->len);
@@ -603,12 +603,12 @@ int wait_flash_message(int fd,int ntimes) {
 		/*
 		 * this is what a "i'm in flashing mode" packet looks like
 		 *
-		 * 
+		 *
 		 *  0x000024 |0 |1 |2 |3 |4 |5 |6 |7 |8 |9 |a |b |c |d |e |f |
 		 *  ---------+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+------------
-		 *  0x000000: 18 05 20 00 01 02 02 06 1c 53 50 4a 37 47 ff 0f   .. ......SPJ7G..   
-		 *  0x000010: 8c 00 53 00 32 2e 30 30 2e 30 36 00 34 0a 00 00   ..S.2.00.06.4...   
-		 *  0x000020: 00 00 00 20                                       ...                
+		 *  0x000000: 18 05 20 00 01 02 02 06 1c 53 50 4a 37 47 ff 0f   .. ......SPJ7G..
+		 *  0x000010: 8c 00 53 00 32 2e 30 30 2e 30 36 00 34 0a 00 00   ..S.2.00.06.4...
+		 *  0x000020: 00 00 00 20                                       ...
 		 */
 
 
@@ -635,7 +635,7 @@ int wait_flash_message(int fd,int ntimes) {
 	return(1);
 }
 
-/* sends the version of firmware that we will be flashing, 
+/* sends the version of firmware that we will be flashing,
  * unobfuscated firmware will have the version number in 16 bytes at 0x2000
  * probably these bytes are sent.
  *
@@ -676,14 +676,14 @@ int k5_writeflash(int fd, unsigned char *buf, int  len, int offset,int max_flash
 	if (verbose>1) printf("@@@@@@@@@@@@@@@@@@     writeflash offset=0x%4.4x len=0x%2.2x\n",offset,len);
 	memset(writeflash,0,sizeof(writeflash));
 
-	/* 0x19  0x5  0xc  0x1  0x8a  0x8d  0x9f  0x1d  
-	 * address_msb  address_lsb  0xe6  0x0  length_msb  length_lsb  0x0  0x0 
+	/* 0x19  0x5  0xc  0x1  0x8a  0x8d  0x9f  0x1d
+	 * address_msb  address_lsb  0xe6  0x0  length_msb  length_lsb  0x0  0x0
 	 * [0x100 bytes of data, if length is <0x100 then fill the rest with zeroes] */
 	writeflash[0]=0x19;
 	writeflash[1]=0x5;
 	/* bytes 2,3: length is 0x10c */
 	writeflash[2]=0xc;
-	writeflash[3]=1; 
+	writeflash[3]=1;
 	writeflash[4]=0x8a;
 	writeflash[5]=0x8d;
 	writeflash[6]=0x9f;
@@ -710,8 +710,8 @@ int k5_writeflash(int fd, unsigned char *buf, int  len, int offset,int max_flash
 	while(l) {
 		cmd=k5_receive(fd,10000);
 		l--;
-		if (!cmd) { 
-			usleep(1000); 
+		if (!cmd) {
+			usleep(1000);
 			continue;
 		}
 
@@ -735,7 +735,7 @@ int k5_writeflash(int fd, unsigned char *buf, int  len, int offset,int max_flash
 			destroy_k5_struct(cmd);
 			continue;
 		}
-		ok=1; 
+		ok=1;
 		destroy_k5_struct(cmd);
 		break;
 	}
@@ -750,7 +750,7 @@ int k5_writeflash(int fd, unsigned char *buf, int  len, int offset,int max_flash
 
 void helpme()
 {
-	printf( 
+	printf(
 			"cmdline opts:\n"
 			"-f <file>\tfilename that contains the eeprom dump (default: " DEFAULT_FILE_NAME ")\n"
 			"-b <file>\tfilename that contains the raw flash image (default " DEFAULT_FLASH_NAME ")\n"
@@ -959,7 +959,7 @@ int main(int argc,char **argv)
 	int flash_max_block_addr;
 	int i,r,j,len;
 
-	printf (VERSION "\n\n"); 
+	printf (VERSION "\n\n");
 
 	parse_cmdline(argc,argv);
 
@@ -1087,9 +1087,9 @@ int main(int argc,char **argv)
 					fprintf(stderr,"Failed to read block 0x%4.4X\n",i);
 					exit(1);
 				}
-				if (verbose>0) { 
-					printf("\rread block 0x%4.4X  %i%%",i,(100*i/UVK5_EEPROM_SIZE)); 
-					fflush(stdout); 
+				if (verbose>0) {
+					printf("\rread block 0x%4.4X  %i%%",i,(100*i/UVK5_EEPROM_SIZE));
+					fflush(stdout);
 				}
 			}
 			close(fd);
@@ -1132,12 +1132,12 @@ int main(int argc,char **argv)
 						fprintf(stderr,"Failed to write block 0x%4.4X\n",i);
 						exit(1);
 					}
-					if (verbose>0) { 
-						printf("\rwrite block 0x%4.4X  %i%%",i,(100*i/j)); 
-						fflush(stdout); 
+					if (verbose>0) {
+						printf("\rwrite block 0x%4.4X  %i%%",i,(100*i/j));
+						fflush(stdout);
 					}
 
-				} 
+				}
 			} else {
 				/* write to radio */
 
@@ -1152,9 +1152,9 @@ int main(int argc,char **argv)
 						fprintf(stderr,"Failed to write block 0x%4.4X length 0x%2.2x\n",uvk5_writes[i][0],uvk5_writes[i][1]);
 						exit(1);
 					}
-					if (verbose>0) { 
-						printf("\rwrite block 0x%4.4X  %i%%",i,(100*i/j)); 
-						fflush(stdout); 
+					if (verbose>0) {
+						printf("\rwrite block 0x%4.4X  %i%%",i,(100*i/j));
+						fflush(stdout);
 					}
 					i++;
 				}
